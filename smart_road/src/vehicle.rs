@@ -15,6 +15,7 @@ pub struct Vehicle {
     pub velocity: f32,
     pub lane: char,
     pub direction:Direction,
+    pub time_spent: f32,
 }
 
 impl Vehicle {
@@ -28,6 +29,7 @@ impl Vehicle {
             velocity,
             lane,
             direction,
+            time_spent: 0.0,
         }
     }
 
@@ -35,6 +37,7 @@ impl Vehicle {
         if self.time > 0.0 {
             self.distance -= self.velocity * delta_time;
             self.time -= delta_time;
+            self.time_spent += delta_time;
         }
     }
 }
