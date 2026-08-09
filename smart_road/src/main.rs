@@ -1,5 +1,7 @@
 mod vehicle;
 mod intersection;
+mod stats;
+use stats::*;
 use vehicle :: {Vehicle,Direction};
 use intersection::Intersection;
 
