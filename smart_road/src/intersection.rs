@@ -17,21 +17,23 @@ impl Intersection {
         }
     }
 
-    pub fn add_vehicle(&mut self, car: Vehicle) {
+    pub fn add_vehicle(&mut self, car: Vehicle) -> bool{
 
         let spawn_blocked = self.vehicles.iter().any(|v|{
             v.direction == car.direction && (v.total_distance - v.distance) < SAFE_DISTANCE 
         });
         if !spawn_blocked {
                     self.vehicles.push(car);
+                    true
+        }else {
+            false
         }
     }
 
     pub fn update(&mut self, delta_time: f32) {
         let num_vehicles = self.vehicles.len();
         for i in 0..num_vehicles {
-            let mut danger = false;
-            let mut safe_speed = self.vehicles[i].velocity;
+            let mut safe_speed = self.vehicles[i].base_velocity;
 
             self.stats.update_speeds(safe_speed);
             for j in 0..num_vehicles {
@@ -50,20 +52,25 @@ impl Intersection {
                             safe_speed = 0.0;
                             self.stats.record_near_miss();
                         } else if distance_between < SAFE_DISTANCE {
-                            danger = true;
+
                             safe_speed = car_j.velocity;
                         }
                     }
                 } else {
-                    if car_i.velocity > 0.0 && car_j.velocity > 0.0 {
+                    if car_i.base_velocity > 0.0 && car_j.base_velocity > 0.0 {
+
                         let dist_to_center_i = car_i.distance - (car_i.total_distance / 2.0);
                         let dist_to_center_j = car_j.distance - (car_j.total_distance / 2.0);
+
                            if dist_to_center_i > -(CAR_LENGTH/2.0) && dist_to_center_j > -(CAR_LENGTH/2.0) {
                             if dist_to_center_i < CRITICAL_DISTANCE && dist_to_center_j < CRITICAL_DISTANCE {
-                                safe_speed = 0.0;
-                                self.stats.record_near_miss();
+                              if dist_to_center_i > dist_to_center_j || (dist_to_center_i == dist_to_center_j && car_i.id > car_j.id) {
+                                    safe_speed = 0.0;
+                                    self.stats.record_near_miss();
+                                }
                             }
                            }else if dist_to_center_i > 0.0 && dist_to_center_j > 0.0 {
+
                             let time_to_center_i = dist_to_center_i / car_i.velocity;
                             let time_to_center_j = dist_to_center_j / car_j.velocity;
 

@@ -13,6 +13,7 @@ pub struct Vehicle {
     pub total_distance: f32 ,
     pub time: f32,
     pub velocity: f32,
+    pub base_velocity: f32,
     pub lane: char,
     pub direction:Direction,
     pub time_spent: f32,
@@ -27,6 +28,7 @@ impl Vehicle {
             total_distance: distance,
             time,
             velocity,
+            base_velocity:velocity,
             lane,
             direction,
             time_spent: 0.0,
@@ -34,11 +36,11 @@ impl Vehicle {
     }
 
     pub fn update(&mut self, delta_time: f32) {
-        if self.time > 0.0 {
+        
             self.distance -= self.velocity * delta_time;
             self.time -= delta_time;
             self.time_spent += delta_time;
-        }
+        
     }
 }
 
