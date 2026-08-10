@@ -17,16 +17,13 @@ impl Intersection {
         }
     }
 
-    pub fn add_vehicle(&mut self, car: Vehicle) -> bool{
+    pub fn add_vehicle(&mut self, car: Vehicle) {
 
         let spawn_blocked = self.vehicles.iter().any(|v|{
             v.direction == car.direction && (v.total_distance - v.distance) < SAFE_DISTANCE 
         });
         if !spawn_blocked {
-                    self.vehicles.push(car);
-                    true
-        }else {
-            false
+                    self.vehicles.push(car);  
         }
     }
 

@@ -42,6 +42,29 @@ impl Vehicle {
             self.time_spent += delta_time;
         
     }
+    pub fn is_at_intersection(&self) -> bool {
+        self.distance <= 460.0 && self.distance >=240.0
+    }
+   
+    pub fn has_turned(&self) -> bool {
+        if self.lane == 's' { 
+            return false; 
+        }
+
+        
+        let turn_point = match (&self.direction, self.lane) {
+            
+            (Direction::South, 'r') | (Direction::East, 'r') => 471.0,
+            (Direction::North, 'r') | (Direction::West, 'r') => 495.0,
+            
+            (Direction::South, 'l') | (Direction::East, 'l') => 371.0,
+            (Direction::North, 'l') | (Direction::West, 'l') => 395.0,
+            
+            _ => 0.0,
+        };
+
+        self.distance <= turn_point
+    }
 }
 
 #[cfg(test)]
