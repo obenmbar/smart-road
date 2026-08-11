@@ -42,10 +42,7 @@ impl Vehicle {
             self.time_spent += delta_time;
         
     }
-    pub fn is_at_intersection(&self) -> bool {
-        self.distance <= 460.0 && self.distance >=240.0
-    }
-   
+
     pub fn has_turned(&self) -> bool {
         if self.lane == 's' { 
             return false; 

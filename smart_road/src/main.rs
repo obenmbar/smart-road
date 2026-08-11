@@ -191,6 +191,7 @@ pub fn main() {
                         if car.lane == 'r' {
                             y = 305.0; 
                             x = base_x - (495.0 - car.distance); 
+                             rect_w = 40; rect_h = 24;
                         } else if car.lane == 'l' {
                             y = 405.0; 
                             x = base_x + (395.0 - car.distance); 
@@ -241,11 +242,11 @@ pub fn main() {
                     }
                 }
             }
+            
             canvas
                 .fill_rect(Rect::new(x as i32, y as i32, rect_w as u32, rect_h as u32))
                 .unwrap();
         }
-
         canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
