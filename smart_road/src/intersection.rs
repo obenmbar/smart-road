@@ -1,6 +1,6 @@
 use crate::vehicle::{Vehicle,Direction};
 use crate::stats::Stats;
-const SAFE_DISTANCE: f32 = 150.0;
+const SAFE_DISTANCE: f32 = 140.0;
 const CRITICAL_DISTANCE: f32 = 60.0;
 const SAFE_TIME_GAP: f32 = 1.5;
  const CAR_LENGTH : f32 = 40.0 ;
@@ -22,7 +22,7 @@ impl Intersection {
     pub fn add_vehicle(&mut self, car: Vehicle) {
 
         let spawn_blocked = self.vehicles.iter().any(|v|{
-            v.direction == car.direction  &&  (v.total_distance - v.distance) <=SAFE_DISTANCE 
+            v.direction == car.direction  && v.lane == car.lane && (v.total_distance - v.distance) <=SAFE_DISTANCE 
         });
         if !spawn_blocked {
                     self.vehicles.push(car);  
@@ -80,7 +80,7 @@ impl Intersection {
 
                     let mut speed_for_this_j = 100.0;
 
-                    let conflict_radius = 70.0;
+                    let conflict_radius = 45.0;
 
                     let dist_enter_i = dist_to_center_i - conflict_radius;
                     let dist_exit_i = dist_to_center_i + conflict_radius + CAR_LENGTH;
