@@ -1,1 +1,0 @@
-/home/obenmbar/smart-road/smart_road/target/debug/smart_road: /home/obenmbar/smart-road/smart_road/src/intersection.rs /home/obenmbar/smart-road/smart_road/src/main.rs /home/obenmbar/smart-road/smart_road/src/stats.rs /home/obenmbar/smart-road/smart_road/src/vehicle.rs

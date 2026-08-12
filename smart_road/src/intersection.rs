@@ -1,9 +1,10 @@
 use crate::vehicle::{Vehicle,Direction};
 use crate::stats::Stats;
-const SAFE_DISTANCE: f32 = 120.0;
+const SAFE_DISTANCE: f32 = 150.0;
 const CRITICAL_DISTANCE: f32 = 60.0;
-const SAFE_TIME_GAP: f32 = 1.0;
+const SAFE_TIME_GAP: f32 = 1.5;
  const CAR_LENGTH : f32 = 40.0 ;
+ const CAR_WIDTH: f32 = 24.0;
 
 
 pub struct Intersection {
@@ -22,13 +23,13 @@ impl Intersection {
     pub fn add_vehicle(&mut self, car: Vehicle) {
 
         let spawn_blocked = self.vehicles.iter().any(|v|{
-            v.direction == car.direction && v.lane == car.lane && (v.total_distance - v.distance) <=SAFE_DISTANCE 
+            v.direction == car.direction  &&  (v.total_distance - v.distance) <=SAFE_DISTANCE 
         });
         if !spawn_blocked {
                     self.vehicles.push(car);  
         }
     }
-pub fn update(&mut self, delta_time: f32) {
+    pub fn update(&mut self, delta_time: f32) {
         let num_vehicles = self.vehicles.len();
         
         for i in 0..num_vehicles {
@@ -47,7 +48,6 @@ pub fn update(&mut self, delta_time: f32) {
                         if gap < CRITICAL_DISTANCE {
                             target_speed = 0.0;
                         } else if gap < SAFE_DISTANCE {
-                           
                             if target_speed > 50.0 { target_speed = 50.0; }
                             if target_speed > car_j.velocity { target_speed = car_j.velocity; }
                         }
@@ -55,39 +55,102 @@ pub fn update(&mut self, delta_time: f32) {
                 } 
                 else {
                 
-                 let dist_to_center_i = match car_i.direction {
+                    if car_i.lane == 'r' || car_j.lane == 'r' {
+                        continue;
+                    }
+                    
+                    let is_opposite = match (&car_i.direction, &car_j.direction) {
+                        (Direction::North, Direction::South) | (Direction::South, Direction::North) => true,
+                        (Direction::East, Direction::West) | (Direction::West, Direction::East) => true,
+                        _ => false,
+                    };
+
+                    if is_opposite && car_i.lane == 's' && car_j.lane == 's' {
+                        continue; 
+                    }
+                    
+                    let dist_to_center_i = match car_i.direction {
                         Direction::North | Direction::West => car_i.distance - 400.0 - 40.0,
                         _ => car_i.distance - 400.0,
                     };
-                    
                     let dist_to_center_j = match car_j.direction {
                         Direction::North | Direction::West => car_j.distance - 400.0 - 40.0,
                         _ => car_j.distance - 400.0,
                     };
-                    if car_i.distance > (300.0 - CAR_LENGTH -10.0) && car_j.distance > (300.0 - CAR_LENGTH -10.0) {
-                        
-                        if (dist_to_center_i - dist_to_center_j).abs() < 60.0 {
-                            
-                            if dist_to_center_i > dist_to_center_j || (dist_to_center_i == dist_to_center_j && car_i.id > car_j.id) {
-                                
-                                if dist_to_center_i < 110.0 {
-                                    target_speed = 0.0;
-                                    self.stats.record_near_miss();
+
+                    let mut speed_for_this_j = 100.0;
+
+                    let conflict_radius = 70.0;
+
+                    let dist_enter_i = dist_to_center_i - conflict_radius;
+                    let dist_exit_i = dist_to_center_i + conflict_radius + CAR_LENGTH;
+
+                    let dist_enter_j = dist_to_center_j - conflict_radius;
+                    let dist_exit_j = dist_to_center_j + conflict_radius + CAR_LENGTH;
+
+                    let t_enter_i = dist_enter_i / 100.0;
+                    let t_exit_i = dist_exit_i / 100.0;
+                    
+                    let t_enter_j = dist_enter_j / 100.0;
+                    let t_exit_j = dist_exit_j / 100.0;
+
+                  
+                    let time_overlap = (t_enter_i < t_exit_j + SAFE_TIME_GAP) && (t_enter_j < t_exit_i + SAFE_TIME_GAP);
+
+                    if time_overlap {
+                        let i_must_yield = dist_to_center_i > dist_to_center_j || (dist_to_center_i == dist_to_center_j && car_i.id > car_j.id);
+
+                        if dist_to_center_i > 360.0 {
+                           
+                            speed_for_this_j = 100.0;
+
+                        } else if i_must_yield {
+                            if dist_exit_j > 0.0 {
+                                let current_v_j = if car_j.velocity > 5.0 { car_j.velocity } else { 5.0 };
+                                let t_exit_j = dist_exit_j / current_v_j;
+                                let desired_t_enter_i = t_exit_j + 0.5;
+                                let mut ideal_speed = dist_enter_i / desired_t_enter_i;
+
+                                if ideal_speed > 100.0 {
+                                    ideal_speed = 100.0;
                                 } 
-                                else if target_speed > 50.0 {
-                                    target_speed = 50.0;
+                                
+                             
+                                if ideal_speed > 0.0 && ideal_speed < 25.0 {
+                                    if dist_enter_i < 40.0 { 
+                                        ideal_speed = 0.0;
+                                    } else {
+                                        ideal_speed = 25.0; 
+                                    }
                                 }
+
+                                speed_for_this_j = ideal_speed;
                             }
+                        } else {
+                         
+                            speed_for_this_j = 120.0; 
                         }
                     }
+                    
+                    target_speed = target_speed.min(speed_for_this_j);
                 }
             }
 
-            self.vehicles[i].velocity = target_speed;
+            let current_v = self.vehicles[i].velocity;
+            
+            let ease_factor = 3.0 * delta_time; 
+
+            let mut new_v = current_v + (target_speed - current_v) * ease_factor;
+
+            if target_speed == 0.0 && new_v < 1.0 {
+                new_v = 0.0;
+            }
+
+            self.vehicles[i].velocity = new_v;
+
         }
 
         for car in &mut self.vehicles {
-          
             car.update(delta_time);
         }
         
