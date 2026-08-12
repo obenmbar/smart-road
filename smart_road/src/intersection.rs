@@ -4,7 +4,6 @@ const SAFE_DISTANCE: f32 = 150.0;
 const CRITICAL_DISTANCE: f32 = 60.0;
 const SAFE_TIME_GAP: f32 = 1.5;
  const CAR_LENGTH : f32 = 40.0 ;
- const CAR_WIDTH: f32 = 24.0;
 
 
 pub struct Intersection {
@@ -47,6 +46,7 @@ impl Intersection {
                         
                         if gap < CRITICAL_DISTANCE {
                             target_speed = 0.0;
+                            self.stats.record_near_miss();
                         } else if gap < SAFE_DISTANCE {
                             if target_speed > 50.0 { target_speed = 50.0; }
                             if target_speed > car_j.velocity { target_speed = car_j.velocity; }
@@ -119,6 +119,7 @@ impl Intersection {
                                 if ideal_speed > 0.0 && ideal_speed < 25.0 {
                                     if dist_enter_i < 40.0 { 
                                         ideal_speed = 0.0;
+                                        self.stats.record_near_miss();
                                     } else {
                                         ideal_speed = 25.0; 
                                     }
@@ -144,10 +145,12 @@ impl Intersection {
 
             if target_speed == 0.0 && new_v < 1.0 {
                 new_v = 0.0;
+                self.stats.record_near_miss();
+
             }
 
             self.vehicles[i].velocity = new_v;
-
+             self.stats.update_speeds(new_v);
         }
 
         for car in &mut self.vehicles {

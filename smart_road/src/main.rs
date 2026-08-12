@@ -9,6 +9,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::surface::Surface;
+use sdl2::messagebox::{show_simple_message_box, MessageBoxFlag};
 use std::time::{Duration, Instant};
 use vehicle::{Direction, Vehicle};
 pub fn main() {
@@ -53,6 +54,34 @@ pub fn main() {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => {
+                    let stats = &intersection.stats;
+                    
+                    let min_v = if stats.min_speed == std::f32::MAX { 0.0 } else { stats.min_speed };
+                    let min_t = if stats.min_time == std::f32::MAX { 0.0 } else { stats.min_time };
+
+                    let msg = format!(
+                        "Simulation Statistics:\n\n\
+                        - Total Vehicles Passed: {}\n\
+                        - Max Velocity: {:.2} px/s\n\
+                        - Min Velocity: {:.2} px/s\n\
+                        - Max Time Taken: {:.2} s\n\
+                        - Min Time Taken: {:.2} s\n\
+                        - Close Calls Avoided: {}",
+                        stats.total_vehicles_crossed,
+                        stats.max_speed,
+                        min_v,
+                        stats.max_time,
+                        min_t,
+                        stats.near_misses,
+                    );
+
+                    show_simple_message_box(
+                        MessageBoxFlag::INFORMATION,
+                        "Smart Road - Results",
+                        &msg,
+                        canvas.window()
+                    ).unwrap();
+
                     break 'running;
                 }
 
@@ -141,7 +170,7 @@ pub fn main() {
             }
         }
         intersection.update(delta_time);
-   canvas.copy(&grass_texture, None, None).unwrap();;
+   canvas.copy(&grass_texture, None, None).unwrap();
 
         canvas.set_draw_color(Color::RGB(80, 80, 80));
         canvas.fill_rect(Rect::new(300, 0, 200, 800)).unwrap();
